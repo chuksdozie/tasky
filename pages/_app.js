@@ -1,5 +1,7 @@
 import "@/styles/globals.css";
 import { Montserrat } from "next/font/google";
+import { store } from "@/store/store";
+import { Provider } from "react-redux";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 
@@ -11,7 +13,9 @@ export default function App({ Component, pageProps }) {
           font-family: ${montserrat.style.fontFamily};
         }
       `}</style>
-      <Component {...pageProps} />
+      <Provider store={store}>
+        <Component {...pageProps} />
+      </Provider>
     </>
   );
 }
