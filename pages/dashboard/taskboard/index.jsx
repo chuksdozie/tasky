@@ -1,7 +1,9 @@
+import { useCounterQuery } from "@/hooks/counter/counter.hook";
 import React from "react";
 
-const index = () => {
+const Index = () => {
+  const { data } = useCounterQuery();
   return <div>index - TaskBoard</div>;
 };
 
-export default index;
+export default Index;

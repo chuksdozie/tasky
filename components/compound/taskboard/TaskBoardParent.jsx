@@ -5,9 +5,12 @@ import styled from "styled-components";
 import { colors } from "@/constants/colors";
 import { sampleData } from "@/constants/sampleData";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { useCounterQuery } from "@/hooks/counter/counter.hook";
 
 export default function TaskBoardParent() {
   const [stores, setStores] = useState(sampleData);
+  const { data } = useCounterQuery();
+  console.log({ data });
   const handleDragEnd = (event) => {
     console.log({ event });
     const { source, destination, type } = event;
