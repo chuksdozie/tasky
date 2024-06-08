@@ -20,3 +20,13 @@ export const useRegister = () => {
     },
   });
 };
+export const useLogin = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data) => API.post(`${URL}/login`, data),
+    onSuccess: () => {
+      // Invalidate and refetch
+      // queryClient.invalidateQueries({ queryKey: ["todos"] });
+    },
+  });
+};

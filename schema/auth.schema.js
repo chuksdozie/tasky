@@ -40,5 +40,5 @@ export const signInSchema = Yup.object({
   email: Yup.string()
     .email("Invalid email format, Please provide a valid email address")
     .required("Required field, Please fill."),
-  user_password: Yup.string().required("Please enter your password"),
+  password: Yup.string().required("Please enter your password"),
 });
