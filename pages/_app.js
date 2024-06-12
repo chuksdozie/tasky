@@ -1,6 +1,6 @@
 import "@/styles/globals.css";
 import { Montserrat } from "next/font/google";
-import { store } from "@/store/store";
+import { persistor, store } from "@/store/store";
 import { Provider } from "react-redux";
 import {
   useQuery,
@@ -9,6 +9,9 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
+import { PersistGate } from "redux-persist/integration/react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 const queryClient = new QueryClient();
@@ -22,9 +25,12 @@ export default function App({ Component, pageProps }) {
         }
       `}</style>
       <Provider store={store}>
-        <QueryClientProvider client={queryClient}>
-          <Component {...pageProps} />
-        </QueryClientProvider>
+        <PersistGate loading={null} persistor={persistor}>
+          <QueryClientProvider client={queryClient}>
+            <Component {...pageProps} />
+            <ToastContainer />
+          </QueryClientProvider>
+        </PersistGate>
       </Provider>
     </>
   );
