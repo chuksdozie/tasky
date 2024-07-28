@@ -13,7 +13,7 @@ const LoginForm = () => {
   const { mutate } = useLogin();
   const dispatch = useDispatch();
   return (
-    <div>
+    <div style={{ width: "100%" }}>
       <Formik
         initialValues={{}}
         onSubmit={(payload, actions) => {

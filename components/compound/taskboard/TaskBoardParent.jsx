@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import { Wrapper } from "@/components/styles/general";
 import styled from "styled-components";
@@ -6,13 +6,43 @@ import { colors } from "@/constants/colors";
 import { sampleData } from "@/constants/sampleData";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { useCounterQuery } from "@/hooks/counter/counter.hook";
+import { fontSizes } from "@/constants/fontSizes";
+import {
+  AiFillPlusSquare,
+  AiOutlineArrowLeft,
+  AiOutlineDelete,
+  AiOutlinePlaySquare,
+  AiOutlinePlusSquare,
+} from "react-icons/ai";
+import PrimaryButton from "@/components/simple/buttons/PrimaryButton";
+import { useRouter } from "next/router";
+import CustomCenterModal from "@/components/modals/CustomCenterModal";
+import ProceedPopup from "@/components/popups/ProceedPopup";
+import { useCreateBoard } from "@/hooks/taskboard/board.hook";
+import { toast } from "react-toastify";
+import { useCreateTask } from "@/hooks/taskboard/task.hook";
+import { useUpdateTaskboard } from "@/hooks/taskboard/taskboard.hook";
 
 export default function TaskBoardParent() {
   const [stores, setStores] = useState(sampleData);
-  const { data } = useCounterQuery();
-  console.log({ data });
+  const [showWarnModal, setShowWarmModal] = useState(false);
+  const router = useRouter();
+  const pageContainerRef = useRef(null);
+  console.log({ datakk: data });
+  const { mutate } = useCreateBoard(data?._id);
+  const { mutate: addTask } = useCreateTask(data?._id);
+  const { mutate: updateTaskboard } = useUpdateTaskboard(data?._id);
+
+  const scrollToRight = () => {
+    if (pageContainerRef.current) {
+      pageContainerRef.current.scrollTo({
+        left: pageContainerRef.current.scrollWidth,
+        behavior: "smooth",
+      });
+    }
+  };
+
   const handleDragEnd = (event) => {
-    console.log({ event });
     const { source, destination, type } = event;
     if (!source || !destination) return;
     const isSameGroup = source?.droppableId === destination?.droppableId;
@@ -28,9 +58,9 @@ export default function TaskBoardParent() {
     } else if (isSameGroup) {
       const originalArray = [...stores];
       const groupIndex = stores.findIndex(
-        (store) => store?.id === source?.droppableId
+        (store) => store?._id === source?.droppableId
       );
-      const newArray = [...stores[groupIndex].items];
+      const newArray = [...stores[groupIndex]?.items];
       const [removed] = newArray.splice(source?.index, 1);
       newArray.splice(destination?.index, 0, removed);
       originalArray[groupIndex]["items"] = newArray;
@@ -38,22 +68,38 @@ export default function TaskBoardParent() {
     } else if (isNotSameGroup) {
       const originalArray = [...stores];
       const sourceGroupIndex = stores.findIndex(
-        (store) => store?.id === source?.droppableId
+        (store) => store?._id === source?.droppableId
       );
       const destinationGroupIndex = stores.findIndex(
-        (store) => store?.id === destination?.droppableId
+        (store) => store?._id === destination?.droppableId
       );
-      const newSourceArray = [...stores[sourceGroupIndex].items];
-      const newDestinationArray = [...stores[destinationGroupIndex].items];
+      const newSourceArray = [...stores[sourceGroupIndex]?.items];
+      const newDestinationArray = [...stores[destinationGroupIndex]?.items];
       const [removed] = newSourceArray.splice(source?.index, 1);
       newDestinationArray.splice(destination?.index, 0, removed);
       originalArray[sourceGroupIndex]["items"] = newSourceArray;
       originalArray[destinationGroupIndex]["items"] = newDestinationArray;
       setStores(originalArray);
     }
-
+    handleBlur();
     return;
   };
+
+  const handleRenameItem = (data) => {
+    const newArray = [...stores];
+    const boardIndex = stores.findIndex(
+      (store) => store?._id === data?.board_id
+    );
+    let board = stores[boardIndex];
+    board["items"][data?.index].name = data?.name;
+    newArray[boardIndex] = board;
+    setStores(newArray);
+  };
+
+  const handleBlur = () => {
+    // TRIGGER API UPDATE CALL
+  };
+
   return (
     <>
       <Head>
@@ -63,7 +109,32 @@ export default function TaskBoardParent() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <Wrapper>
-        <h1>Task Board Name</h1>
+        <Header>
+          <div>
+            <div
+              className="back"
+              onClick={() => router.push("/dashboard/taskboard")}
+            >
+              <AiOutlineArrowLeft size={10} color={colors.warning600} />
+              <p>Back to All Boards</p>
+            </div>
+            <h1>Task Board Name</h1>
+          </div>
+
+          <div className="right">
+            <AiOutlineDelete
+              size={20}
+              color={colors.warning600}
+              className="icon"
+              onClick={() => setShowWarmModal(true)}
+            />
+            <PrimaryButton
+              value={"+ New Group"}
+              onClick={() => console.log("API CALL CREATE BOARD")}
+            />
+          </div>
+        </Header>
+
         <PageContainer>
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId="rack" type={"rack"} direction="horizontal">
@@ -72,12 +143,13 @@ export default function TaskBoardParent() {
                   className="overall"
                   {...provided.droppableProps}
                   ref={provided.innerRef}
+                  // ref={pageContainerRef}
                 >
                   {stores?.map((group, index) => (
                     <Draggable
-                      key={group?.id}
+                      key={group?._id}
                       index={index}
-                      draggableId={group?.id}
+                      draggableId={group?._id}
                     >
                       {(provided) => (
                         <div
@@ -85,7 +157,13 @@ export default function TaskBoardParent() {
                           {...provided.draggableProps}
                           ref={provided.innerRef}
                         >
-                          <Rack key={group?.id} group={group} />
+                          <Rack
+                            key={group?._id}
+                            group={group}
+                            onAdd={() => console.log("API CALL CREATE TASK")}
+                            handleRenameItem={handleRenameItem}
+                            onBlur={handleBlur}
+                          />
                         </div>
                       )}
                     </Draggable>
@@ -96,23 +174,47 @@ export default function TaskBoardParent() {
             </Droppable>
           </DragDropContext>
         </PageContainer>
+        <CustomCenterModal
+          // width={isMobile ? "100%" : "600px"}
+          // showClose={true}
+          isOpen={showWarnModal}
+          toggleModal={() => {
+            setShowWarmModal((prev) => !prev);
+          }}
+        >
+          <ProceedPopup
+            title="Are you sure?"
+            description={"Deleting a board is permanent, it cant be undone."}
+          />
+        </CustomCenterModal>
       </Wrapper>
     </>
   );
 }
 
-const Rack = ({ group }) => {
+const Rack = ({ group, onAdd, handleRenameItem, onBlur }) => {
   return (
-    <Droppable key={group?.id} droppableId={group?.id} type="group">
+    <Droppable key={group?._id} droppableId={group?._id} type="group">
       {(provided) => (
         <div
           className="task_group"
           {...provided.droppableProps}
           ref={provided?.innerRef}
         >
-          <h3>{group?.name}</h3>
+          <div className="task_group_header">
+            <h3>{group?.name}</h3>
+            <div>
+              <AiOutlineDelete
+                size={20}
+                onClick={onAdd}
+                color={colors.error500}
+              />
+              <AiOutlinePlusSquare size={20} onClick={onAdd} />
+            </div>
+          </div>
+
           {group?.items?.map((item, index) => (
-            <Draggable key={item?.id} draggableId={item?.id} index={index}>
+            <Draggable key={item?._id} draggableId={item?._id} index={index}>
               {(provided) => (
                 <div
                   className="task_card"
@@ -120,7 +222,25 @@ const Rack = ({ group }) => {
                   {...provided.dragHandleProps}
                   ref={provided.innerRef}
                 >
-                  <h4>{item?.name}</h4>
+                  <input
+                    type="text"
+                    // defaultValue={item?.name}
+                    value={item?.name}
+                    onChange={(e) =>
+                      handleRenameItem({
+                        board_id: group?._id,
+                        id: item?._id,
+                        index,
+                        name: e.target.value,
+                      })
+                    }
+                    onBlur={onBlur}
+                  />
+                  <AiOutlineDelete
+                    color={colors.error600}
+                    style={{ cursor: "pointer" }}
+                  />
+                  {/* <h4>{item?.name}</h4> */}
                 </div>
               )}
             </Draggable>
@@ -131,9 +251,50 @@ const Rack = ({ group }) => {
     </Droppable>
   );
 };
+const Header = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  div {
+    /* background-color: ${colors.primary200}; */
+  }
+  /* margin-bottom: 1rem; */
+  h1 {
+    font-size: ${fontSizes.l};
+    font-weight: 600;
+  }
+  .back {
+    display: flex;
+    align-items: center;
+    margin: 0 0 0.5rem;
+    cursor: pointer;
+    p {
+      font-size: ${fontSizes.xs};
+      color: ${colors.warning600};
+      font-weight: 600;
+    }
+  }
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    .icon {
+      background-color: ${colors.warning100};
+      padding: 0.5rem;
+      width: 50px;
+      height: 30px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+  }
+`;
 
 const PageContainer = styled.div`
   display: flex;
+  height: 100%;
+  width: 100%;
+
   .overall {
     display: flex;
     gap: 1rem;
@@ -141,7 +302,7 @@ const PageContainer = styled.div`
     padding: 1rem;
     overflow: scroll;
     margin-top: 1rem;
-    border-radius: 10px;
+    border-radius: 5px;
     width: 100%;
   }
   .task_group {
@@ -149,13 +310,23 @@ const PageContainer = styled.div`
     flex-direction: column;
     min-height: 150px;
     width: 300px;
-    background-color: ${colors.gray300};
+    /* background-color: ${colors.gray300}; */
     padding: 1.5rem 1rem;
     /* margin: 0 1rem; */
-
-    background-color: ${colors.primary200};
+    border: 1px solid ${colors.gray300};
+    /* background-color: ${colors.gray200}; */
     height: fit-content;
-    border-radius: 10px;
+    border-radius: 5px;
+    .task_group_header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h3 {
+      color: ${colors.gray600};
+      font-size: ${fontSizes.m};
+      font-weight: 600;
+    }
   }
   .task_card {
     width: 100%;
@@ -164,6 +335,29 @@ const PageContainer = styled.div`
     background-color: ${colors.gray200};
     margin: 0.5rem 0;
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1rem;
+    box-shadow: 0px 0px 6px 1px ${colors.primary100};
+    input {
+      width: 100%;
+      border-radius: 5px;
+      outline: 0;
+      height: 25px;
+      border: 1px solid ${colors.gray300};
+      padding: 5px;
+      background-color: transparent;
+      color: ${colors.gray600};
+      font-weight: 500 !important;
+      font-style: italic;
+      font-size: ${fontSizes.s};
+    }
+    h4 {
+      font-size: ${fontSizes.s};
+      font-weight: 400;
+      color: ${colors.gray600};
+    }
   }
 
   .drop {

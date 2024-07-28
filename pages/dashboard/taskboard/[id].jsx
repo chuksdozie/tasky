@@ -6,52 +6,14 @@ import { colors } from "@/constants/colors";
 import { sampleData } from "@/constants/sampleData";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import TaskBoardParent from "@/components/compound/taskboard/TaskBoardParent";
+import { useRouter } from "next/router";
+import { useGetTaskboard } from "@/hooks/taskboard/taskboard.hook";
 
 export default function Home() {
   const [stores, setStores] = useState(sampleData);
-  const handleDragEnd = (event) => {
-    console.log({ event });
-    const { source, destination, type } = event;
-    if (!source || !destination) return;
-    const isSameGroup = source?.droppableId === destination?.droppableId;
-    const isNotSameGroup = source?.droppableId !== destination?.droppableId;
+  const router = useRouter();
+  const { id } = router?.query;
 
-    if (isSameGroup && type === "rack") {
-      const originalArray = [...stores];
-
-      const [removed] = originalArray.splice(source?.index, 1);
-      originalArray.splice(destination?.index, 0, removed);
-      setStores(originalArray);
-      return;
-    } else if (isSameGroup) {
-      const originalArray = [...stores];
-      const groupIndex = stores.findIndex(
-        (store) => store?.id === source?.droppableId
-      );
-      const newArray = [...stores[groupIndex].items];
-      const [removed] = newArray.splice(source?.index, 1);
-      newArray.splice(destination?.index, 0, removed);
-      originalArray[groupIndex]["items"] = newArray;
-      setStores(originalArray);
-    } else if (isNotSameGroup) {
-      const originalArray = [...stores];
-      const sourceGroupIndex = stores.findIndex(
-        (store) => store?.id === source?.droppableId
-      );
-      const destinationGroupIndex = stores.findIndex(
-        (store) => store?.id === destination?.droppableId
-      );
-      const newSourceArray = [...stores[sourceGroupIndex].items];
-      const newDestinationArray = [...stores[destinationGroupIndex].items];
-      const [removed] = newSourceArray.splice(source?.index, 1);
-      newDestinationArray.splice(destination?.index, 0, removed);
-      originalArray[sourceGroupIndex]["items"] = newSourceArray;
-      originalArray[destinationGroupIndex]["items"] = newDestinationArray;
-      setStores(originalArray);
-    }
-
-    return;
-  };
   return (
     <>
       <Head>
@@ -60,7 +22,23 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <TaskBoardParent />
+      <TaskBoardParent data={taskboard} />
     </>
   );
+}
+
+export async function getStaticProps(context) {
+  console.log({ context });
+  return {
+    props: {
+      foo: false,
+    },
+  };
+}
+
+export async function getStaticPaths() {
+  return {
+    paths: [],
+    fallback: true,
+  };
 }

@@ -1,4 +1,5 @@
 import { colors } from "@/constants/colors";
+import { fontSizes } from "@/constants/fontSizes";
 import styled from "styled-components";
 
 export const Wrapper = styled.div`
@@ -10,6 +11,18 @@ export const Wrapper = styled.div`
   align-items: ${({ align }) => align ?? `flex-start`};
   margin: 0;
   padding: 1rem;
+  width: 100%;
+  h1 {
+    font-size: ${fontSizes.l};
+    font-weight: 500;
+    color: ${colors.gray600};
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
 `;
 
 export const FormWrapper = styled.div`
@@ -20,4 +33,5 @@ export const FormWrapper = styled.div`
   align-items: ${({ align }) => align ?? `flex-start`};
   padding: 1rem;
   gap: 1rem;
+  width: 100%;
 `;

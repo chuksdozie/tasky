@@ -12,6 +12,7 @@ import {
 import { PersistGate } from "redux-persist/integration/react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import DashboardLayout from "@/layouts/dashboard/DashboardLayout";
 
 const montserrat = Montserrat({ subsets: ["latin"] });
 const queryClient = new QueryClient();
@@ -27,8 +28,10 @@ export default function App({ Component, pageProps }) {
       <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
           <QueryClientProvider client={queryClient}>
-            <Component {...pageProps} />
-            <ToastContainer />
+            <DashboardLayout>
+              <Component {...pageProps} />
+              <ToastContainer />
+            </DashboardLayout>
           </QueryClientProvider>
         </PersistGate>
       </Provider>

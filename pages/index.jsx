@@ -1,12 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Head from "next/head";
 import { Wrapper } from "@/components/styles/general";
 import styled from "styled-components";
 import { colors } from "@/constants/colors";
 import { sampleData } from "@/constants/sampleData";
 import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
+import { useRouter } from "next/router";
 
 export default function Home() {
+  const router = useRouter();
+  useEffect(() => {
+    router.push("/dashboard/taskboard");
+  }, [router]);
   return (
     <>
       <Head>
